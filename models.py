@@ -22,7 +22,7 @@ create(model='assistant', from_=BASE_MODEL)
 
 for filename in os.listdir("models"):
 
-	model = ".".join(filename.split(".")[:-1])
+	model = ".".join(filename.split(".")[:-1]).lower()
 	system = open(os.path.join("models", filename), "r").read()
 
 	create(model=model, from_=BASE_MODEL, system=system)
