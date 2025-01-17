@@ -50,11 +50,10 @@ def chat(model: str):
 
 	# if not user_input:
 	# 	return jsonify({"error": "No message provided"}), 400
-
-	# Retrieve session history or initialize an empty list
-	session.setdefault(model, [])
-
+	
 	if user_input:
+
+		session.setdefault(model, [])
 
 		# Append the new user message to the history
 		session[model].append({
@@ -63,6 +62,8 @@ def chat(model: str):
 			})
 		
 	else:
+
+		session[model] = []
 
 		session[model].append({
 				"role": "user",
