@@ -12,7 +12,7 @@ def create(model, *args, **kwargs):
 
 
 create(
-	model='ollama', 
+	model='assistant', 
 	from_='llama2-uncensored'
 )
 
