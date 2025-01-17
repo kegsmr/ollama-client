@@ -16,9 +16,16 @@ def make_session_permanent():
     session.permanent = True
 
 
+@app.after_request
+def add_cors_headers(response):
+	response.headers['Access-Control-Allow-Origin'] = '*'
+	return response
+
+
 @app.errorhandler(404)
 def error_404(e):
 	return render_template('error_404.html', description=e.description), 404
+
 
 @app.route('/.well-known/acme-challenge/<filename>')
 def serve_challenge(filename):
