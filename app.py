@@ -48,19 +48,28 @@ def chat(model: str):
 
 	user_input = request.json.get('message')
 
-	if not user_input:
-		return jsonify({"error": "No message provided"}), 400
+	# if not user_input:
+	# 	return jsonify({"error": "No message provided"}), 400
 
 	# Retrieve session history or initialize an empty list
 	session.setdefault(model, [])
 
-	# Append the new user message to the history
-	session[model].append({
-			"role": "user",
-			"content": user_input
-		})
+	if user_input:
+
+		# Append the new user message to the history
+		session[model].append({
+				"role": "user",
+				"content": user_input
+			})
+		
+	else:
+
+		session[model].append({
+				"role": "user",
+				"content": "Hello!"
+			})
 	
-	print(session[model])
+	#print(session[model])
 
 	try:
 

@@ -92,6 +92,26 @@
         </div>
     </div>
     <script>
+
+		document.addEventListener('DOMContentLoaded', async () => {
+			const chatBox = document.getElementById('chat-box');
+
+			try {
+				// Send a hidden "Hello" message to the server on page load
+				const response = await fetch('/{{model}}/chat', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ message: "" })
+				});
+				const data = await response.json();
+				const reply = data.reply || `Error: ${data.error}`;
+				chatBox.innerHTML += `<div class="message"><span class="bot">{{model}}:</span> ${reply}</div>`;
+				chatBox.scrollTop = chatBox.scrollHeight;
+			} catch (error) {
+				chatBox.innerHTML += `<div class="message"><span class="bot">Error:</span> Failed to connect</div>`;
+			}
+		});
+
         async function sendMessage() {
             const message = document.getElementById('user-input').value.trim();
             if (!message) return;
@@ -121,6 +141,7 @@
             // Re-enable the button after the reply
             sendButton.removeAttribute('disabled');
         }
+
     </script>
 </body>
 </html>
