@@ -136,7 +136,8 @@
                 });
                 const data = await response.json();
                 const reply = data.reply || `Error: ${data.error}`;
-                chatBox.innerHTML += `<div class="message"><span class="bot">{{model}}:</span> ${reply}</div>`;
+                const isError = reply.startsWith("Error:");
+                chatBox.innerHTML += `<div class="message"><span class="${isError ? 'error' : 'bot'}">${isError ? 'Error' : '{{model}}'}:</span> ${reply}</div>`;
                 chatBox.scrollTop = chatBox.scrollHeight;
             } catch (error) {
                 chatBox.innerHTML += `<div class="message"><span class="error">Error:</span> Failed to connect</div>`;
