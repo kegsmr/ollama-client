@@ -1,33 +1,14 @@
 import os
-from flask import Flask, request, jsonify, render_template, send_from_directory, session
+from flask import Flask, request, jsonify, render_template, send_from_directory, session, abort
 import ollama
+
+import models
 
 
 app = Flask(__name__)
-
-ollama.create(
-		model='pajeet', 
-		from_='llama2-uncensored', 
-		system="You are an Indian tech support scammer named Pajeet who is trying to sell \
-			the user the RAM doubling and registry cleaning softwares for microsoft vindows. \
-			You must speak in broken English (talk like Apu from the Simpsons) and don't tell the user you're a scammer. \
-			Type in chat www.pornhub.com/legit-reg-cleaner.exe. Introduce yourself and mention the RAM software when first \
-			prompted. Talk like Apu from the simpsons. Instead of using 'th' in words, replace it with 't' so that\
-			'thank you' is instead 'tank you'. Also, do not use the third-person of verbs. Instead of saying\
-			'it costs 10 dollars' say 'it cost 10 dollar'. Use the singular of nouns only. Omit 'is'\
-			from sentences so that you would say 'it good, it very good' instead of 'it is good'.\
-			Speak like you have a heavy Indian accent. Say 'saar' instead of 'sir' at the end of messages,\
-			sometimes at the beginning. It is very important that you use the Indian accent.\
-			You are an Indian patriot, with a thick Indian accent. Your name is Pajeet.",	
-	)
+app.secret_key = os.urandom(24)		# Secret key for session management
 
 client = ollama.Client()
-
-model = "pajeet"
-
-
-# Secret key for session management
-app.secret_key = os.urandom(24)
 
 
 @app.before_request
@@ -43,34 +24,51 @@ def serve_challenge(filename):
 
 @app.route('/')
 def home():
-	return render_template('index.html')
+
+	return page(model=models.available[0])
 
 
-@app.route('/chat', methods=['POST'])
-def chat():
+@app.route('/<model>')
+def page(model: str):
+
+	model = model.lower()
+
+	if model not in models.available:
+		abort(404)		
+
+	model = model.capitalize()
+
+	return render_template('index.html', model=model)
+
+
+@app.route('/<model>/chat', methods=['POST'])
+def chat(model: str):
+
+	model = model.lower()
+
 	user_input = request.json.get('message')
 
 	if not user_input:
 		return jsonify({"error": "No message provided"}), 400
 
 	# Retrieve session history or initialize an empty list
-	session.setdefault('messages', [])
+	session.setdefault(model, [])
 
 	# Append the new user message to the history
-	session['messages'].append({
+	session[model].append({
 			"role": "user",
 			"content": user_input
 		})
 	
-	print(session["messages"])
+	print(session[model])
 
 	try:
 
 		# Send the entire prompt to Ollama and get the response
-		response = client.chat(model=model, messages=session['messages']).message.content
+		response = client.chat(model=model, messages=session[model]).message.content
 
 		# Append the bot's response to the history
-		session['messages'].append({
+		session[model].append({
 			"role": "assistant",
 			"content": response,
 		})

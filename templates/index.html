@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat with Ollama</title>
+    <title>Chat with {{model}}</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -84,7 +84,7 @@
 </head>
 <body>
     <div class="chat-container">
-        <div class="chat-header">Chat with Ollama</div>
+        <div class="chat-header">Chat with {{model}}</div>
         <div id="chat-box" class="chat-box"></div>
         <div class="input-container">
             <input type="text" id="user-input" placeholder="Type your message..." onkeydown="if(event.key === 'Enter') sendMessage();">
@@ -105,14 +105,14 @@
             document.getElementById('user-input').value = '';
 
             try {
-                const response = await fetch('/chat', {
+                const response = await fetch('/{{model}}/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ message: message })
                 });
                 const data = await response.json();
                 const reply = data.reply || `Error: ${data.error}`;
-                chatBox.innerHTML += `<div class="message"><span class="bot">Ollama:</span> ${reply}</div>`;
+                chatBox.innerHTML += `<div class="message"><span class="bot">{{model}}:</span> ${reply}</div>`;
                 chatBox.scrollTop = chatBox.scrollHeight;
             } catch (error) {
                 chatBox.innerHTML += `<div class="message"><span class="bot">Error:</span> Failed to connect</div>`;
