@@ -4,7 +4,9 @@ import ollama
 available = []
 
 
-def create(model, *args, **kwargs):
+def create(model: str, *args, **kwargs):
+
+	model = model.lower()
 
 	available.append(model)
 
