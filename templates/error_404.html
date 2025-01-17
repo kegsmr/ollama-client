@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Page Not Found</title>
+    <style>
+		body {
+			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+			background-color: #e6eefc;
+			margin: 0;
+			padding: 0;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			height: 100vh;
+		}
+		.error-container {
+			width: 100%;
+			max-width: 600px;
+			background: linear-gradient(135deg, #ffffff, #f0f8ff);
+			border-radius: 10px;
+			box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+			padding: 30px; /* Increased padding for more space */
+			text-align: center;
+		}
+		.error-header {
+			font-size: 3rem;
+			font-weight: bold;
+			color: #3a3a3a;
+			margin-bottom: 15px; /* Added space below the header */
+		}
+		.error-message {
+			font-size: 1.2rem;
+			color: #555;
+			margin-bottom: 25px; /* More space before the button */
+		}
+		.home-button {
+			padding: 14px 28px; /* Larger padding for a bigger button */
+			background-color: #1e90ff;
+			color: white;
+			border: none;
+			border-radius: 8px;
+			cursor: pointer;
+			font-size: 1.1rem;
+			transition: background-color 0.3s;
+			text-decoration: none;
+		}
+		.home-button:hover {
+			background-color: #0d6efd;
+		}
+	</style>	
+</head>
+<body>
+    <div class="error-container">
+        <div class="error-header">404</div>
+        <div class="error-message">Oops! The page you are looking for cannot be found.</div>
+        <a href="/" class="home-button">Go to Homepage</a>
+    </div>
+</body>
+</html>

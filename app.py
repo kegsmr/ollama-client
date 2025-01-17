@@ -16,6 +16,10 @@ def make_session_permanent():
     session.permanent = True
 
 
+@app.errorhandler(404)
+def error_404(e):
+	return render_template('error_404.html', description=e.description), 404
+
 @app.route('/.well-known/acme-challenge/<filename>')
 def serve_challenge(filename):
 	challenge_directory = os.path.join(os.getcwd(), '.well-known', 'acme-challenge')
@@ -24,7 +28,6 @@ def serve_challenge(filename):
 
 @app.route('/')
 def home():
-
 	return page(model=models.available[0])
 
 
