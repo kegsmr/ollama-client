@@ -51,6 +51,10 @@
             font-weight: bold;
             color: #32cd32;
         }
+		.error {
+            font-weight: bold;
+            color: lightcoral;
+        }
         .input-container {
             display: flex;
             align-items: center;
@@ -108,7 +112,7 @@
 				chatBox.innerHTML += `<div class="message"><span class="bot">{{model}}:</span> ${reply}</div>`;
 				chatBox.scrollTop = chatBox.scrollHeight;
 			} catch (error) {
-				chatBox.innerHTML += `<div class="message"><span class="bot">Error:</span> Failed to connect</div>`;
+				chatBox.innerHTML += `<div class="message"><span class="error">Error:</span> Failed to connect</div>`;
 			}
 		});
 
@@ -135,7 +139,7 @@
                 chatBox.innerHTML += `<div class="message"><span class="bot">{{model}}:</span> ${reply}</div>`;
                 chatBox.scrollTop = chatBox.scrollHeight;
             } catch (error) {
-                chatBox.innerHTML += `<div class="message"><span class="bot">Error:</span> Failed to connect</div>`;
+                chatBox.innerHTML += `<div class="message"><span class="error">Error:</span> Failed to connect</div>`;
             }
 
             // Re-enable the button after the reply
