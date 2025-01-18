@@ -20,6 +20,8 @@ def create(model: str, *args, **kwargs):
 
 create(model='assistant', from_=BASE_MODEL)
 
+os.makedirs("models", exist_ok=True)
+
 for filename in os.listdir("models"):
 
 	model = ".".join(filename.split(".")[:-1]).lower()
