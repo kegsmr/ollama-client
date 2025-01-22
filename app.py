@@ -1,4 +1,6 @@
+import random
 import os
+
 from flask import Flask, request, jsonify, render_template, send_from_directory, session, abort
 import ollama
 
@@ -60,7 +62,7 @@ def chat(model: str):
 
 	# if not user_input:
 	# 	return jsonify({"error": "No message provided"}), 400
-	
+
 	if user_input:
 
 		session.setdefault(model, [])
@@ -77,15 +79,16 @@ def chat(model: str):
 
 		session[model].append({
 				"role": "user",
-				"content": "Hello!"
+				"content": "Who are you?"
 			})
 	
-	#print(session[model])
+	messages = models.messages.get(model, [])
+	random.shuffle(messages)
 
 	try:
 
 		# Send the entire prompt to Ollama and get the response
-		response = client.chat(model=model, messages=session[model]).message.content
+		response = client.chat(model=model, messages=(messages + session[model])).message.content
 
 		# Append the bot's response to the history
 		session[model].append({
