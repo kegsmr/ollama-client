@@ -9,6 +9,8 @@ BASE_MODEL = 'llama2-uncensored'
 available = []
 
 messages = {}
+after = {}
+before = {}
 
 
 def create(model: str, *args, **kwargs):
@@ -57,3 +59,19 @@ for filename in os.listdir("messages"):
 				})
 
 	messages[model] = m
+
+
+for filename in os.listdir("after"):
+
+	model = model_name_from_filename(filename)
+	a = open(os.path.join("after", filename), "r", encoding="utf-8").read()
+
+	after[model] = a
+
+
+for filename in os.listdir("before"):
+
+	model = model_name_from_filename(filename)
+	b = open(os.path.join("before", filename), "r", encoding="utf-8").read()
+
+	before[model] = b

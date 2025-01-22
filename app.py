@@ -60,6 +60,14 @@ def chat(model: str):
 
 	user_input = request.json.get('message')
 
+	before = models.before.get(model, "")
+	# if before:
+	# 	before = f"{before}\n\n"
+
+	after = models.after.get(model, "")
+	# if after:
+	# 	after = f"\n\n{after}"
+
 	# if not user_input:
 	# 	return jsonify({"error": "No message provided"}), 400
 
@@ -67,11 +75,23 @@ def chat(model: str):
 
 		session.setdefault(model, [])
 
+		if before:
+			session[model].append({
+					"role": "user",
+					"content": before
+				})
+
 		# Append the new user message to the history
 		session[model].append({
 				"role": "user",
 				"content": user_input
 			})
+		
+		if after:
+			session[model].append({
+					"role": "user",
+					"content": after
+				})
 		
 	else:
 
