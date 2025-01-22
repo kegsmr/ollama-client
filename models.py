@@ -20,11 +20,11 @@ def create(model: str, *args, **kwargs):
 
 create(model='assistant', from_=BASE_MODEL)
 
-os.makedirs("models", exist_ok=True)
+os.makedirs("prompts", exist_ok=True)
 
-for filename in os.listdir("models"):
+for filename in os.listdir("prompts"):
 
 	model = ".".join(filename.split(".")[:-1]).lower()
-	system = open(os.path.join("models", filename), "r").read()
+	system = open(os.path.join("prompts", filename), "r", encoding="utf-8").read()
 
 	create(model=model, from_=BASE_MODEL, system=system)
