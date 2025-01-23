@@ -1,4 +1,5 @@
 import random
+import re
 import os
 
 from flask import Flask, request, jsonify, render_template, send_from_directory, session, abort
@@ -15,19 +16,40 @@ client = ollama.Client()
 
 def format_response(response: str) -> str:
 
+	response = response.replace("\n", "<br>")
+
 	r = []
-
+	c = False
 	for word in response.split(" "):
-		if is_link(word):
-			if word.startswith("http://") or word.startswith("https://"):
-				link = word
-			else:
-				link = f"http://{word}"
-			r.append(f"<a href='{link}'>{word}</a>")
-		else:
+		if "```" in word:
+			c = not c
 			r.append(word)
+		else:	
+			if not c and is_link(word):
+				if word.startswith("http://") or word.startswith("https://"):
+					link = word
+				else:
+					link = f"http://{word}"
+				r.append(f"<a href='{link}' target='_blank'>{word}</a>")
+			else:
+				r.append(word)
+	response = " ".join(r)
 
-	return " ".join(r)
+	response = format_code_blocks(response)
+
+	return response
+
+
+def format_code_blocks(text):
+
+    def code_block_to_html(match):
+        code = match.group(1)
+        return f'<div class="code-block" style="background-color: #f4f4f4; border: 1px solid #ddd; padding: 10px; margin: 10px 0; font-family: monospace; white-space: pre-wrap;">{code}</div>'
+
+    # Replace all code blocks with formatted HTML div
+    formatted_text = re.sub(r'```(.*?)```', code_block_to_html, text, flags=re.S)
+
+    return formatted_text
 
 
 def is_link(text: str) -> bool:
