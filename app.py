@@ -13,6 +13,33 @@ app.secret_key = os.urandom(24)		# Secret key for session management
 client = ollama.Client()
 
 
+def format_response(response: str) -> str:
+
+	r = []
+
+	for word in response.split(" "):
+		if is_link(word):
+			if word.startswith("http://") or word.startswith("https://"):
+				link = word
+			else:
+				link = f"http://{word}"
+			r.append(f"<a href='{link}'>{word}</a>")
+		else:
+			r.append(word)
+
+	return " ".join(r)
+
+
+def is_link(text: str) -> bool:
+
+	t = text.split(".")
+	
+	if "" in t:
+		t.remove("")
+
+	return len(t) > 1
+
+
 @app.before_request
 def make_session_permanent():
     session.permanent = True
@@ -115,6 +142,8 @@ def chat(model: str):
 			"role": "assistant",
 			"content": response,
 		})
+
+		response = format_response(response)
 
 		return jsonify({"reply": response})
 
