@@ -16,38 +16,55 @@ client = ollama.Client()
 
 def format_response(response: str) -> str:
 
+	response = response.replace("```\n", "```")
 	response = response.replace("\n", "<br>")
 
-	r = []
-	c = False
-	for word in response.split(" "):
-		if "```" in word:
-			c = not c
-			r.append(word)
-		else:	
-			if not c and is_link(word):
-				if word.startswith("http://") or word.startswith("https://"):
-					link = word
-				else:
-					link = f"http://{word}"
-				r.append(f"<a href='{link}' target='_blank'>{word}</a>")
-			else:
-				r.append(word)
-	response = " ".join(r)
+	response = format_links(response)
 
 	response = format_code_blocks(response)
 
 	return response
 
 
-def format_code_blocks(text):
+def format_links(text: str) -> str:
 
-    def code_block_to_html(match):
+	t = []
+	c = False
+
+	for word in text.split(" "):
+		if "```" in word or "`" in word:
+			c = not c
+			t.append(word)
+		else:	
+			if not c and is_link(word):
+				if word.startswith("http://") or word.startswith("https://"):
+					link = word
+				else:
+					link = f"http://{word}"
+				t.append(f"<a href='{link}' target='_blank'>{word}</a>")
+			else:
+				t.append(word)
+
+	return " ".join(t)
+
+
+def format_code_blocks(text: str) -> str:
+
+    # Function to replace code blocks with styled <div>
+    def format_block_code(match):
         code = match.group(1)
         return f'<div class="code-block" style="background-color: #f4f4f4; border: 1px solid #ddd; padding: 10px; margin: 10px 0; font-family: monospace; white-space: pre-wrap;">{code}</div>'
 
-    # Replace all code blocks with formatted HTML div
-    formatted_text = re.sub(r'```(.*?)```', code_block_to_html, text, flags=re.S)
+    # Function to replace inline code with <code>
+    def format_inline_code(match):
+        code = match.group(1)
+        return f'<code style="background-color: #f4f4f4; padding: 2px 4px; border-radius: 4px; font-family: monospace;">{code}</code>'
+
+    # Format block code first
+    formatted_text = re.sub(r'```(.*?)```', format_block_code, text, flags=re.S)
+
+    # Format inline code
+    formatted_text = re.sub(r'`([^`]+)`', format_inline_code, formatted_text)
 
     return formatted_text
 
