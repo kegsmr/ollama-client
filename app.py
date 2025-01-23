@@ -2,8 +2,10 @@ import random
 import re
 import os
 
+from bs4 import BeautifulSoup
 from flask import Flask, request, jsonify, render_template, send_from_directory, session, abort
 import ollama
+import requests
 
 import models
 
@@ -17,7 +19,7 @@ client = ollama.Client()
 def format_response(response: str) -> str:
 
 	response = response.replace("```\n", "```")
-	response = response.replace("\n", "<br>")
+	response = response.replace("\n", " <br>")
 
 	response = format_links(response)
 
@@ -37,15 +39,23 @@ def format_links(text: str) -> str:
 			t.append(word)
 		else:	
 			if not c and is_link(word):
-				if word.startswith("http://") or word.startswith("https://"):
-					link = word
-				else:
-					link = f"http://{word}"
+				link = format_link(word)
 				t.append(f"<a href='{link}' target='_blank'>{word}</a>")
 			else:
 				t.append(word)
 
 	return " ".join(t)
+
+
+def format_link(text: str) -> str:
+
+	while text and text[-1] in [".", "!", ",", "?"]:
+		text = text[:-1]
+
+	if text.startswith("http://") or text.startswith("https://"):
+		return text
+	else:
+		return f"http://{text}"
 
 
 def format_code_blocks(text: str) -> str:
@@ -71,12 +81,39 @@ def format_code_blocks(text: str) -> str:
 
 def is_link(text: str) -> bool:
 
-	t = text.split(".")
-	
-	if "" in t:
-		t.remove("")
+	while text and text[-1] in [".", "!", ",", "?"]:
+		text = text[:-1]
 
-	return len(t) > 1
+	# Regular expression for detecting URLs
+	url_regex = re.compile(
+		r'^(https?:\/\/)?'  # Optional http or https scheme
+		r'(www\.)?'         # Optional www subdomain
+		r'[a-zA-Z0-9-]+'    # Domain name
+		r'(\.[a-zA-Z]{2,})' # Top-level domain (e.g., .com, .org)
+		r'(\/[^\s]*)?$'     # Optional path, query, or fragment
+	)
+
+	return bool(url_regex.match(text))
+
+
+def html_to_text(html: str) -> str:
+
+	# Parse the HTML with BeautifulSoup
+	soup = BeautifulSoup(html, 'html.parser')
+	
+	# Remove unwanted elements (e.g., script, style, etc.)
+	for unwanted in soup(['script', 'style', 'head', 'meta', 'noscript']):
+		unwanted.decompose()
+	
+	# Extract the visible text
+	visible_text = soup.get_text(separator='\n').strip()
+	
+	t = []
+	for line in visible_text.splitlines():
+		if line:
+			t.append(line.strip())
+
+	return "\n".join(t)
 
 
 @app.before_request
@@ -141,6 +178,23 @@ def chat(model: str):
 
 		session.setdefault(model, [])
 
+		urls = []
+		for word in user_input.split(" "):
+			if is_link(word):
+				urls.append(format_link(word))
+
+		webpages = {}
+		failed_urls = {}
+		for url in urls:
+			try:
+				r = requests.get(url)
+				if r.status_code == 200:
+					webpages[url] = html_to_text(r.text)
+				else:
+					raise Exception(f"{r.status_code} error")
+			except Exception as e:
+				failed_urls[url] = e
+
 		if before:
 			session[model].append({
 					"role": "user",
@@ -158,6 +212,18 @@ def chat(model: str):
 					"role": "user",
 					"content": after
 				})
+			
+		for url, webpage in webpages.items():
+			session[model].append({
+				"role": "system",
+				"content": f"Contents of '{url}':\n\n\"{webpage}\""
+			})
+
+		for url, error in failed_urls.items():
+			session[model].append({
+				"role": "system",
+				"content": f"Failed to load {url}:\n\n\"{error}\""
+			})
 		
 	else:
 
@@ -167,7 +233,7 @@ def chat(model: str):
 				"role": "user",
 				"content": "Who are you?"
 			})
-	
+
 	messages = models.messages.get(model, [])
 	random.shuffle(messages)
 
