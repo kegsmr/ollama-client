@@ -174,9 +174,27 @@ def chat(model: str):
 	# if not user_input:
 	# 	return jsonify({"error": "No message provided"}), 400
 
+	messages = []
+
 	if user_input:
 
 		session.setdefault(model, [])
+
+		# Get default conversations from the model
+		conversations = models.messages.get(model, [])
+		
+		# Shuffle conversations
+		random.shuffle(conversations)
+
+		# Limit the amount of messages
+		# LIMIT = 100
+		# if len(conversations) > LIMIT:
+		# 	conversations = conversations[:LIMIT]
+
+		# Concatenate everything into one array
+		for conversation in conversations:
+			for message in conversation:
+				messages.append(message)
 
 		urls = []
 		for word in user_input.split(" "):
@@ -234,13 +252,10 @@ def chat(model: str):
 				"content": "Who are you?"
 			})
 
-	messages = models.messages.get(model, [])
-	random.shuffle(messages)
-
 	try:
 
 		# Send the entire prompt to Ollama and get the response
-		response = client.chat(model=model, messages=(messages + session[model])).message.content
+		response = client.chat(model=model, messages=(messages + session[model])).message.content.strip()
 
 		# Append the bot's response to the history
 		session[model].append({

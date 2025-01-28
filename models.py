@@ -37,41 +37,61 @@ for directory in ["prompts", "messages"]:
 
 for filename in os.listdir("prompts"):
 
-	model = model_name_from_filename(filename)
-	system = open(os.path.join("prompts", filename), "r", encoding="utf-8").read()
+	if filename.endswith(".txt"):
 
-	create(model=model, from_=BASE_MODEL, system=system)
+		model = model_name_from_filename(filename)
+		system = open(os.path.join("prompts", filename), "r", encoding="utf-8").read()
+
+		create(model=model, from_=BASE_MODEL, system=system)
 
 
 for filename in os.listdir("messages"):
 
-	model = model_name_from_filename(filename)
-	
-	m = []
+	if filename.endswith(".txt"):
 
-	with open(os.path.join("messages", filename), "r", encoding="utf-8") as file:
-		for line in file:
-			l = line.strip()
-			if len(l) > 0:
-				m.append({
-					"role": "assistant",
-					"content": l,
-				})
+		model = model_name_from_filename(filename)
+		
+		m = []
 
-	messages[model] = m
+		with open(os.path.join("messages", filename), "r", encoding="utf-8") as file:
+			for line in file:
+				l = line.strip()
+				if len(l) > 0:
+					role = "assistant"
+					if l.startswith("assistant: ") or l.lower().startswith(f"{model}: "):
+						content = l.split(": ", 1)[1]
+					elif l.startswith("user: ") or l.startswith("You: "):
+						content = l.split(": ", 1)[1]
+						role = "user"
+					else:
+						content = l
+					message = {
+						"role": role,
+						"content": content,
+					}
+					if len(m) == 0 or not (m[-1][-1]["role"] == "user" and role == "assistant"):
+						m.append([message])
+					else:
+						m[-1].append(message)
+
+		messages[model] = m
 
 
 for filename in os.listdir("after"):
 
-	model = model_name_from_filename(filename)
-	a = open(os.path.join("after", filename), "r", encoding="utf-8").read()
+	if filename.endswith(".txt"):
 
-	after[model] = a
+		model = model_name_from_filename(filename)
+		a = open(os.path.join("after", filename), "r", encoding="utf-8").read()
+
+		after[model] = a
 
 
 for filename in os.listdir("before"):
 
-	model = model_name_from_filename(filename)
-	b = open(os.path.join("before", filename), "r", encoding="utf-8").read()
+	if filename.endswith(".txt"):
 
-	before[model] = b
+		model = model_name_from_filename(filename)
+		b = open(os.path.join("before", filename), "r", encoding="utf-8").read()
+
+		before[model] = b
