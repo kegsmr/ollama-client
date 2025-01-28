@@ -187,7 +187,7 @@ def chat(model: str):
 		session.setdefault(model, [])
 
 		# Limit the amount of messages stored
-		LIMIT = 20
+		LIMIT = 100
 		if len(session[model]) > LIMIT:
 			session[model] = session[model][len(session) - LIMIT:]
 		
@@ -203,6 +203,12 @@ def chat(model: str):
 			for token in t:
 				if token not in topics:
 					topics.append(token)
+		# print(topics)
+
+		# Limit amount of topics
+		LIMIT = 100
+		if len(topics) > LIMIT:
+			topics = topics[:LIMIT]
 
 		# Get default conversations from the model
 		conversations = models.messages.get(model, [])
@@ -219,18 +225,19 @@ def chat(model: str):
 				content = (word_tokenize(message["content"].lower()))
 				for token in content:
 					if token in topics:
-						relevance += len(topics) / (topics.index(token) + 1)
+						relevance += (len(topics) / (topics.index(token) + 1)) ** 2
 					total_tokens += 1
 			if relevance > 0:
 				relevance = relevance / total_tokens
 				c.append((relevance, conversation))
 		c = sorted(c, key=lambda item: item[0])
 		conversations = [item[1] for item in c]
+		# print(c)
 
 		# Limit the amount of conversations to include
-		# LIMIT = 20
-		# if len(conversations) > LIMIT:
-		# 	conversations = conversations[len(conversations) - LIMIT:]
+		LIMIT = 100
+		if len(conversations) > LIMIT:
+			conversations = conversations[len(conversations) - LIMIT:]
 
 		# Concatenate everything into one array
 		for conversation in conversations:
