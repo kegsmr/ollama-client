@@ -329,17 +329,23 @@ def like(model: str):
 
 	model = model.lower()
 
-	user_message = session[model][-2]
-	bot_message = session[model][-1]
+	user_messages = []
+	bot_messages = []
+	for message in session[model]:
+		if message["role"] == "user":
+			user_messages.append(message)
+		elif message["role"] == "assistant":
+			bot_messages.append(message)
 
-	if user_message["role"] != "user" or bot_message["role"] != "assistant":
-		return
+	user_message = user_messages[-1]
+	bot_message = bot_messages[-1]
 
 	data = [
 		user_message,
 		bot_message
 	]
 
+	# Just so you dont have to restart the program
 	models.messages[model].append(data)
 
 	# Ensure the 'liked' directory structure exists
@@ -354,6 +360,7 @@ def like(model: str):
 	with open(file_path, 'w') as json_file:
 		json.dump(data, json_file, indent=4)
 
+	# If no errrors occur
 	return jsonify(["SUCCESS"])
 
 
@@ -363,13 +370,15 @@ def dislike(model: str):
 	model = model.lower()
 
 	# Remove the unwanted response
-	session[model].pop(-1)
+	message = session[model].pop(-1)
 
-	# Remove the last user message
-	message = session[model].pop(-1)["content"]
+	# Remove the last user message and all messages after
+	while message["role"] != "user":
+		message = session[model].pop(-1)
+	content = message["content"]
 
 	# Redo the chat with the last user message
-	return chat(model, message)
+	return chat(model, content)
 
 
 if __name__ == '__main__':
