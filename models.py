@@ -1,4 +1,5 @@
 import os
+import json
 
 import ollama
 
@@ -77,21 +78,31 @@ for filename in os.listdir("messages"):
 		messages[model] = m
 
 
-for filename in os.listdir("after"):
+for model in os.listdir("liked"):
 
-	if filename.endswith(".txt"):
+	path = os.path.join("liked", model)
 
-		model = model_name_from_filename(filename)
-		a = open(os.path.join("after", filename), "r", encoding="utf-8").read()
+	for filename in os.listdir(path):
 
-		after[model] = a
+		messages[model].append(json.load(open(os.path.join(path, filename), "r", encoding="utf-8")))
+		print(messages[model])
 
 
-for filename in os.listdir("before"):
+# for filename in os.listdir("after"):
 
-	if filename.endswith(".txt"):
+# 	if filename.endswith(".txt"):
 
-		model = model_name_from_filename(filename)
-		b = open(os.path.join("before", filename), "r", encoding="utf-8").read()
+# 		model = model_name_from_filename(filename)
+# 		a = open(os.path.join("after", filename), "r", encoding="utf-8").read()
 
-		before[model] = b
+# 		after[model] = a
+
+
+# for filename in os.listdir("before"):
+
+# 	if filename.endswith(".txt"):
+
+# 		model = model_name_from_filename(filename)
+# 		b = open(os.path.join("before", filename), "r", encoding="utf-8").read()
+
+# 		before[model] = b

@@ -113,6 +113,7 @@
 				const data = await response.json();
 				const reply = data.reply || `Error: ${data.error}`;
 				chatBox.innerHTML += `<div class="message"><span class="bot">{{model}}:</span> ${reply}</div>`;
+				addLikeDislikeButtons();
 				chatBox.scrollTop = chatBox.scrollHeight;
 			} catch (error) {
 				chatBox.innerHTML += `<div class="message"><span class="error">Error:</span> Failed to connect</div>`;
@@ -135,6 +136,11 @@
             sendButton.setAttribute('disabled', true);
 
             const chatBox = document.getElementById('chat-box');
+            
+            // Hide existing like/dislike buttons before appending the new message
+            const existingButtons = chatBox.querySelectorAll('.like-dislike-buttons');
+            existingButtons.forEach(buttonDiv => buttonDiv.style.display = 'none');
+            
             chatBox.innerHTML += `<div class="message"><span class="user">You:</span> ${message}</div>`;
             document.getElementById('user-input').value = '';
 
@@ -148,6 +154,7 @@
                 const reply = data.reply || `Error: ${data.error}`;
                 const isError = reply.startsWith("Error:");
                 chatBox.innerHTML += `<div class="message"><span class="${isError ? 'error' : 'bot'}">${isError ? 'Error' : '{{model}}'}:</span> ${reply}</div>`;
+                addLikeDislikeButtons();
                 chatBox.scrollTop = chatBox.scrollHeight;
             } catch (error) {
                 chatBox.innerHTML += `<div class="message"><span class="error">Error:</span> Failed to connect</div>`;
@@ -155,6 +162,60 @@
 
             // Re-enable the button after the reply
             sendButton.removeAttribute('disabled');
+        }
+
+        function addLikeDislikeButtons() {
+            const chatBox = document.getElementById('chat-box');
+            const messages = chatBox.querySelectorAll('.message');
+            const lastMessage = messages[messages.length - 1];
+
+            if (lastMessage.querySelector('.like-dislike-buttons')) return;
+
+            const buttonsSpan = document.createElement('span');
+            buttonsSpan.classList.add('like-dislike-buttons');
+            buttonsSpan.innerHTML = `    
+                <a onclick="handleLikeDislike(event, 'like')" class="like-button" aria-label="Like" style="cursor: pointer;">👍</button>
+				<a onclick="handleLikeDislike(event, 'dislike')" class="dislike-button" aria-label="Dislike" style="cursor: pointer;">👎</button>
+            `;
+            lastMessage.appendChild(buttonsSpan);
+        }
+
+        async function handleLikeDislike(event, action) {
+            const buttonsSpan = event.target.closest('.like-dislike-buttons');
+			const chatBox = document.getElementById('chat-box');
+			if (action == "like") {
+				try {
+					const response = await fetch('/{{model}}/like', {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' }
+					});
+					const data = await response.json();
+					buttonsSpan.style.display = 'none';
+				} catch (error) {
+					console.log(error)
+				}
+			} else if (action == "dislike") {
+				const messages = chatBox.querySelectorAll('.message');
+				const lastMessage = messages[messages.length - 1];
+				if (lastMessage) {
+					lastMessage.remove()
+				}
+				try {
+					const response = await fetch('/{{model}}/dislike', {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' }
+					});
+					const data = await response.json();
+					const reply = data.reply || `Error: ${data.error}`;
+					const isError = reply.startsWith("Error:");
+					chatBox.innerHTML += `<div class="message"><span class="${isError ? 'error' : 'bot'}">${isError ? 'Error' : '{{model}}'}:</span> ${reply}</div>`;
+					addLikeDislikeButtons();
+					chatBox.scrollTop = chatBox.scrollHeight;
+					buttonsSpan.style.display = 'none';
+				} catch (error) {
+					chatBox.innerHTML += `<div class="message"><span class="error">Error:</span> Failed to connect</div>`;
+				}
+			}
         }
 
     </script>

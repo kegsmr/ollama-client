@@ -1,6 +1,8 @@
 import random
 import re
 import os
+import json
+from datetime import datetime
 
 from bs4 import BeautifulSoup
 from flask import Flask, request, jsonify, render_template, send_from_directory, session, abort
@@ -162,11 +164,12 @@ def page(model: str):
 
 
 @app.route('/<model>/chat', methods=['POST'])
-def chat(model: str):
+def chat(model: str, user_input=""):
 
 	model = model.lower()
 
-	user_input = request.json.get('message')
+	if not user_input:
+		user_input = request.json.get('message')
 
 	before = models.before.get(model, "")
 	# if before:
@@ -262,11 +265,11 @@ def chat(model: str):
 			except Exception as e:
 				failed_urls[url] = e
 
-		if before:
-			session[model].append({
-					"role": "user",
-					"content": before
-				})
+		# if before:
+		# 	session[model].append({
+		# 			"role": "user",
+		# 			"content": before
+		# 		})
 
 		# Append the new user message to the history
 		session[model].append({
@@ -274,11 +277,11 @@ def chat(model: str):
 				"content": user_input
 			})
 		
-		if after:
-			session[model].append({
-					"role": "user",
-					"content": after
-				})
+		# if after:
+		# 	session[model].append({
+		# 			"role": "user",
+		# 			"content": after
+		# 		})
 			
 		for url, webpage in webpages.items():
 			session[model].append({
@@ -319,6 +322,54 @@ def chat(model: str):
 	except Exception as e:
 
 		return jsonify({"error": str(e)}), 500
+
+
+@app.route('/<model>/like', methods=['POST'])
+def like(model: str):
+
+	model = model.lower()
+
+	user_message = session[model][-2]
+	bot_message = session[model][-1]
+
+	if user_message["role"] != "user" or bot_message["role"] != "assistant":
+		return
+
+	data = [
+		user_message,
+		bot_message
+	]
+
+	models.messages[model].append(data)
+
+	# Ensure the 'liked' directory structure exists
+	timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+	directory = os.path.join("liked", model)
+	os.makedirs(directory, exist_ok=True)
+
+	# File path
+	file_path = os.path.join(directory, f"{timestamp}.json")
+
+	# Write the JSON data to the file
+	with open(file_path, 'w') as json_file:
+		json.dump(data, json_file, indent=4)
+
+	return jsonify(["SUCCESS"])
+
+
+@app.route('/<model>/dislike', methods=['POST'])
+def dislike(model: str):
+	
+	model = model.lower()
+
+	# Remove the unwanted response
+	session[model].pop(-1)
+
+	# Remove the last user message
+	message = session[model].pop(-1)["content"]
+
+	# Redo the chat with the last user message
+	return chat(model, message)
 
 
 if __name__ == '__main__':
