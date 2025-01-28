@@ -84,6 +84,7 @@ for model in os.listdir("liked"):
 
 	for filename in os.listdir(path):
 
+		messages.setdefault(model, [])
 		messages[model].append(json.load(open(os.path.join(path, filename), "r", encoding="utf-8")))
 
 
