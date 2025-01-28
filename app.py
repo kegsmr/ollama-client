@@ -184,10 +184,10 @@ def chat(model: str, user_input=""):
 
 	messages = []
 
-	if user_input:
+	# Session cookie message history storage
+	session.setdefault(model, [])
 
-		# Session cookie message history storage
-		session.setdefault(model, [])
+	if user_input:
 
 		# Limit the amount of messages stored
 		LIMIT = 100
