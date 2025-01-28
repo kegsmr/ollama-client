@@ -197,6 +197,8 @@
 			} else if (action == "dislike") {
 				const messages = chatBox.querySelectorAll('.message');
 				const lastMessage = messages[messages.length - 1];
+				const sendButton = document.getElementById('send-button');
+				sendButton.setAttribute('disabled', true);
 				if (lastMessage) {
 					lastMessage.remove()
 				}
@@ -215,6 +217,7 @@
 				} catch (error) {
 					chatBox.innerHTML += `<div class="message"><span class="error">Error:</span> Failed to connect</div>`;
 				}
+				sendButton.removeAttribute('disabled');
 			}
         }
 
