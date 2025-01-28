@@ -346,6 +346,7 @@ def like(model: str):
 	]
 
 	# Just so you dont have to restart the program
+	models.messages.setdefault(model, [])
 	models.messages[model].append(data)
 
 	# Ensure the 'liked' directory structure exists
