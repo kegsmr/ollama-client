@@ -6,8 +6,13 @@ from bs4 import BeautifulSoup
 from flask import Flask, request, jsonify, render_template, send_from_directory, session, abort
 import ollama
 import requests
+from nltk.tokenize import word_tokenize
+import nltk
 
 import models
+
+
+nltk.download('punkt')
 
 
 app = Flask(__name__)
@@ -178,7 +183,26 @@ def chat(model: str):
 
 	if user_input:
 
+		# Session cookie message history storage
 		session.setdefault(model, [])
+
+		# Limit the amount of messages stored
+		LIMIT = 20
+		if len(session[model]) > LIMIT:
+			session[model] = session[model][len(session) - LIMIT:]
+		
+		# Get relevant topics
+		topics = []
+		for message in reversed([message["content"] for message in session[model]] + [user_input]):
+			tokens = reversed(word_tokenize(message.lower()))
+			t = {}
+			for token in tokens:
+				t.setdefault(token, 0)
+				t[token] += 1
+			t = [token for token, _ in sorted(t.items(), key=lambda item: item[1], reverse=True)]
+			for token in t:
+				if token not in topics:
+					topics.append(token)
 
 		# Get default conversations from the model
 		conversations = models.messages.get(model, [])
@@ -186,15 +210,33 @@ def chat(model: str):
 		# Shuffle conversations
 		random.shuffle(conversations)
 
-		# Limit the amount of messages
-		# LIMIT = 100
+		# Filter/sort relevant conversations
+		c = []
+		for conversation in conversations:
+			relevance = 0.0
+			total_tokens = 0
+			for message in conversation:
+				content = (word_tokenize(message["content"].lower()))
+				for token in content:
+					if token in topics:
+						relevance += len(topics) / (topics.index(token) + 1)
+					total_tokens += 1
+			if relevance > 0:
+				relevance = relevance / total_tokens
+				c.append((relevance, conversation))
+		c = sorted(c, key=lambda item: item[0])
+		conversations = [item[1] for item in c]
+
+		# Limit the amount of conversations to include
+		# LIMIT = 20
 		# if len(conversations) > LIMIT:
-		# 	conversations = conversations[:LIMIT]
+		# 	conversations = conversations[len(conversations) - LIMIT:]
 
 		# Concatenate everything into one array
 		for conversation in conversations:
 			for message in conversation:
 				messages.append(message)
+		# print(messages)
 
 		urls = []
 		for word in user_input.split(" "):
