@@ -209,9 +209,9 @@ def chat(model: str, user_input=""):
 		# print(topics)
 
 		# Limit amount of topics
-		LIMIT = 100
-		if len(topics) > LIMIT:
-			topics = topics[:LIMIT]
+		# LIMIT = 100
+		# if len(topics) > LIMIT:
+		# 	topics = topics[:LIMIT]
 
 		# Get default conversations from the model
 		conversations = models.messages.get(model, [])
