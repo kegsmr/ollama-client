@@ -1,16 +1,20 @@
+from __future__ import annotations
+
 import re
 import os
 import json
 import random
+from pprint import pprint
 from datetime import datetime
+from functools import lru_cache
 
 import nltk
+import numpy
 import ollama
 import requests
 from bs4 import BeautifulSoup
 from flask import Flask, request, jsonify, render_template, \
     send_from_directory, session, abort
-from nltk.tokenize import word_tokenize
 
 import models
 
@@ -130,6 +134,32 @@ def html_to_text(html: str) -> str:
     return "\n".join(t)
 
 
+@lru_cache(maxsize=10240)
+def embed(text: str) -> numpy.ndarray:
+    v = numpy.array(
+        ollama.embeddings(
+            model="nomic-embed-text",
+            prompt=text
+        )["embedding"],
+        dtype=numpy.float32
+    )
+    return v / numpy.linalg.norm(v)
+
+
+def embed_conversation(conversation: list[dict]):
+    text = ""
+    for message in conversation:
+        role = (message.get('role') or '').strip()
+        content = (message.get('content') or '').strip().replace('\n', ' ')
+        if role and content:
+            text += f"{role}: {content}\n"
+    return embed(text.strip())
+
+
+def cosine(a: numpy.ndarray, b: numpy.ndarray) -> float:
+    return float(numpy.dot(a, b))
+
+
 @app.before_request
 def make_session_permanent():
     session.permanent = True
@@ -189,41 +219,27 @@ def chat(model: str, user_input=""):
         # Limit the amount of messages stored
         session[model] = session[model][-100:]
 
-        # Get relevant topics
-        topics = []
-        for message in reversed([message["content"] for message in session[model]] + [user_input]):
-            tokens = reversed(word_tokenize(message.lower()))
-            t = {}
-            for token in tokens:
-                t.setdefault(token, 0)
-                t[token] += 1
-            t = [token for token, _ in sorted(t.items(), key=lambda item: item[1], reverse=True)]
-            for token in t:
-                if token not in topics:
-                    topics.append(token)
-
         # Get default conversations from the model
         conversations = models.messages.get(model, [])
 
-        # Shuffle conversations
+        # Shuffle and limit
         random.shuffle(conversations)
+        conversations = conversations[:1000]
 
-        # Filter/sort relevant conversations
-        c = []
-        for conversation in conversations:
-            relevance = 0.0
-            total_tokens = 0
-            for message in conversation:
-                content = (word_tokenize(message["content"].lower()))
-                for token in content:
-                    if token in topics:
-                        relevance += (len(topics) / (topics.index(token) + 1)) ** 2
-                    total_tokens += 1
-            if relevance > 0:
-                relevance = relevance / total_tokens
-                c.append((relevance, conversation))
-        c = sorted(c, key=lambda item: item[0])
-        conversations = [item[1] for item in c]
+        # Sort by ascending cosine similarity
+        conversations = sorted(
+            conversations, 
+            key=lambda conversation: sum([
+                cosine(
+                    embed(user_input),
+                    embed_conversation(conversation)
+                ),
+                cosine(
+                    embed_conversation(session[model]),
+                    embed_conversation(conversation)
+                )
+            ])
+        )
 
         # Limit the amount of conversations to include
         conversations = conversations[-100:]
