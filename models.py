@@ -16,16 +16,16 @@ before = {}
 
 def create(model: str, *args, **kwargs):
 
-	model = model.lower()
+    model = model.lower()
 
-	available.append(model)
+    available.append(model)
 
-	return ollama.create(model=model, *args, **kwargs)
+    return ollama.create(model=model, *args, **kwargs)
 
 
 def model_name_from_filename(filename: str) -> str:
 
-	return ".".join(filename.split(".")[:-1]).lower()
+    return ".".join(filename.split(".")[:-1]).lower()
 
 
 create(model='assistant', from_=BASE_MODEL)
@@ -33,56 +33,56 @@ create(model='assistant', from_=BASE_MODEL)
 
 for directory in ["prompts", "messages"]:
 
-	os.makedirs(directory, exist_ok=True)
+    os.makedirs(directory, exist_ok=True)
 
 
 for filename in os.listdir("prompts"):
 
-	if filename.endswith(".txt"):
+    if filename.endswith(".txt"):
 
-		model = model_name_from_filename(filename)
-		system = open(os.path.join("prompts", filename), "r", encoding="utf-8").read()
+        model = model_name_from_filename(filename)
+        system = open(os.path.join("prompts", filename), "r", encoding="utf-8").read()
 
-		create(model=model, from_=BASE_MODEL, system=system)
+        create(model=model, from_=BASE_MODEL, system=system)
 
 
 for filename in os.listdir("messages"):
 
-	if filename.endswith(".txt"):
+    if filename.endswith(".txt"):
 
-		model = model_name_from_filename(filename)
-		
-		m = []
+        model = model_name_from_filename(filename)
 
-		with open(os.path.join("messages", filename), "r", encoding="utf-8") as file:
-			for line in file:
-				l = line.strip()
-				if len(l) > 0:
-					role = "assistant"
-					if l.startswith("assistant: ") or l.lower().startswith(f"{model}: "):
-						content = l.split(": ", 1)[1]
-					elif l.startswith("user: ") or l.startswith("You: "):
-						content = l.split(": ", 1)[1]
-						role = "user"
-					else:
-						content = l
-					message = {
-						"role": role,
-						"content": content,
-					}
-					if len(m) == 0 or not (m[-1][-1]["role"] == "user" and role == "assistant"):
-						m.append([message])
-					else:
-						m[-1].append(message)
+        m = []
 
-		messages[model] = m
+        with open(os.path.join("messages", filename), "r", encoding="utf-8") as file:
+            for line in file:
+                l = line.strip()
+                if len(l) > 0:
+                    role = "assistant"
+                    if l.startswith("assistant: ") or l.lower().startswith(f"{model}: "):
+                        content = l.split(": ", 1)[1]
+                    elif l.startswith("user: ") or l.startswith("You: "):
+                        content = l.split(": ", 1)[1]
+                        role = "user"
+                    else:
+                        content = l
+                    message = {
+                        "role": role,
+                        "content": content,
+                    }
+                    if len(m) == 0 or not (m[-1][-1]["role"] == "user" and role == "assistant"):
+                        m.append([message])
+                    else:
+                        m[-1].append(message)
+
+        messages[model] = m
 
 
 for model in os.listdir("liked"):
 
-	path = os.path.join("liked", model)
+    path = os.path.join("liked", model)
 
-	for filename in os.listdir(path):
+    for filename in os.listdir(path):
 
-		messages.setdefault(model, [])
-		messages[model].append(json.load(open(os.path.join(path, filename), "r", encoding="utf-8")))
+        messages.setdefault(model, [])
+        messages[model].append(json.load(open(os.path.join(path, filename), "r", encoding="utf-8")))
