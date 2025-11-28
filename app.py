@@ -190,9 +190,7 @@ def chat(model: str, user_input=""):
 	if user_input:
 
 		# Limit the amount of messages stored
-		LIMIT = 100
-		if len(session[model]) > LIMIT:
-			session[model] = session[model][len(session) - LIMIT:]
+		session[model] = session[model][-100:]
 		
 		# Get relevant topics
 		topics = []
@@ -206,12 +204,6 @@ def chat(model: str, user_input=""):
 			for token in t:
 				if token not in topics:
 					topics.append(token)
-		# print(topics)
-
-		# Limit amount of topics
-		# LIMIT = 100
-		# if len(topics) > LIMIT:
-		# 	topics = topics[:LIMIT]
 
 		# Get default conversations from the model
 		conversations = models.messages.get(model, [])
@@ -235,18 +227,14 @@ def chat(model: str, user_input=""):
 				c.append((relevance, conversation))
 		c = sorted(c, key=lambda item: item[0])
 		conversations = [item[1] for item in c]
-		# print(c)
 
 		# Limit the amount of conversations to include
-		LIMIT = 100
-		if len(conversations) > LIMIT:
-			conversations = conversations[len(conversations) - LIMIT:]
+		conversations = conversations[-100:]
 
 		# Concatenate everything into one array
 		for conversation in conversations:
 			for message in conversation:
 				messages.append(message)
-		# print(messages)
 
 		urls = []
 		for word in user_input.split(" "):
@@ -265,24 +253,14 @@ def chat(model: str, user_input=""):
 			except Exception as e:
 				failed_urls[url] = e
 
-		# if before:
-		# 	session[model].append({
-		# 			"role": "user",
-		# 			"content": before
-		# 		})
-
 		# Append the new user message to the history
-		session[model].append({
+		session[model].append(
+			{
 				"role": "user",
 				"content": user_input
-			})
-		
-		# if after:
-		# 	session[model].append({
-		# 			"role": "user",
-		# 			"content": after
-		# 		})
-			
+			}
+		)
+
 		for url, webpage in webpages.items():
 			session[model].append({
 				"role": "system",
@@ -297,12 +275,12 @@ def chat(model: str, user_input=""):
 		
 	else:
 
-		session[model] = []
-
-		session[model].append({
+		session[model] = [
+			{
 				"role": "user",
 				"content": "Who are you?"
-			})
+			}
+		]
 
 	try:
 
