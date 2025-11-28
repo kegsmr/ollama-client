@@ -86,23 +86,3 @@ for model in os.listdir("liked"):
 
 		messages.setdefault(model, [])
 		messages[model].append(json.load(open(os.path.join(path, filename), "r", encoding="utf-8")))
-
-
-# for filename in os.listdir("after"):
-
-# 	if filename.endswith(".txt"):
-
-# 		model = model_name_from_filename(filename)
-# 		a = open(os.path.join("after", filename), "r", encoding="utf-8").read()
-
-# 		after[model] = a
-
-
-# for filename in os.listdir("before"):
-
-# 	if filename.endswith(".txt"):
-
-# 		model = model_name_from_filename(filename)
-# 		b = open(os.path.join("before", filename), "r", encoding="utf-8").read()
-
-# 		before[model] = b
