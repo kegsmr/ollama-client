@@ -8,7 +8,6 @@ from pprint import pprint
 from datetime import datetime
 from functools import lru_cache
 
-import nltk
 import numpy
 import ollama
 import requests
@@ -18,8 +17,6 @@ from flask import Flask, request, jsonify, render_template, \
 
 import models
 
-
-nltk.download('punkt')
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
@@ -224,7 +221,7 @@ def chat(model: str, user_input=""):
 
         # Shuffle and limit
         random.shuffle(conversations)
-        conversations = conversations[:1000]
+        conversations = conversations[:max(10, min(len(conversations) // 3, 1000))]
 
         # Sort by ascending cosine similarity
         conversations = sorted(
@@ -242,7 +239,7 @@ def chat(model: str, user_input=""):
         )
 
         # Limit the amount of conversations to include
-        conversations = conversations[-100:]
+        conversations = conversations[-50:]
 
         # Concatenate everything into one array
         for conversation in conversations:
