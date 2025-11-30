@@ -154,7 +154,10 @@ def embed_conversation(conversation: list[dict]):
 
 
 def cosine(a: numpy.ndarray, b: numpy.ndarray) -> float:
-    return float(numpy.dot(a, b))
+    try:
+        return float(numpy.dot(a, b))
+    except ValueError:
+        return 0.0
 
 
 @app.before_request
