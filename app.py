@@ -239,7 +239,7 @@ def chat(model: str, user_input=""):
         )
 
         # Limit the amount of conversations to include
-        conversations = conversations[-50:]
+        conversations = conversations[-30:]
 
         # Concatenate everything into one array
         for conversation in conversations:
